@@ -1,0 +1,6 @@
+Fitness proportionate selection
+One point crossover
+Mutation, keep low prob of doing so
+When to stop?
+
+Look into doing it sequentially vs doing all fitnisses at every iteration

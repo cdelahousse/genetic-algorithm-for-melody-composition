@@ -1,0 +1,9 @@
+
+Sections can not START with rests
+
+All notes must be within 2 octaves
+
+Prefer C5 octave over others. Then C4, C6. Then C3, C7
+
+Account for rests not being higher or lower
+
