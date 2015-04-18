@@ -6,7 +6,6 @@
 # )
 
 
-POPULATION = 50
 from constants import *
 from misc import *
 from fitness import octave_range_fitness, monotonic_notes_fitness, no_jump_fitness
@@ -28,22 +27,86 @@ def gen_chromosone():
     duration = DEFAULT_DURATION
     return (note_idx, octave_idx, abs_note, duration)
 
+def fitness_prop_selection(population_with_score_sorted):
+    sum_scores = sum([score for score, dna in population_with_score_sorted])
+    population_with_proportion_sorted = [
+            (score / float(sum_scores), dna) for score, dna in
+                population_with_score_sorted ]
+
+
+    last_sum_prop = 0
+    population_sum_prop_sorted= []
+    for prop, dna in population_with_proportion_sorted:
+        last_sum_prop += prop
+        population_sum_prop_sorted.append((last_sum_prop, dna))
+
+    r = random.uniform(0,1)
+
+    for sum_prop, dan in population_sum_prop_sorted:
+        if (r < sum_prop):
+            # print sum_prop
+            return dna
+
+    raise Exception('We should not get here')
+
+
+def crossover(first_parent, second_parent):
+    len_dna = len(first_parent)
+    crossover_idx = random.randrange(0, len_dna)
+
+    first_child = first_parent[0:crossover_idx] + second_parent[crossover_idx:]
+    second_child = second_parent[0:crossover_idx] + first_parent[crossover_idx:]
+    return first_child, second_child
+
+#Returns scored populations SORTED
+def score_population(population):
+    population_with_score = []
+    for dna in population:
+        score = 0
+        score += 2*octave_range_fitness(dna)
+        score += monotonic_notes_fitness(dna)
+        score += no_jump_fitness(dna)
+
+        population_with_score.append((score, dna))
+
+    #Ascending
+    population_with_score_sorted = sorted(
+            population_with_score, key=lambda t: t[0])
+
+    return population_with_score_sorted
+
+def run_iteration(population):
+    population_with_score_sorted = score_population(population)
+    new_pop = []
+    while (len(new_pop) < POPULATION):
+        first_parent = fitness_prop_selection(population_with_score_sorted)
+        second_parent = fitness_prop_selection(population_with_score_sorted)
+        first_child, second_child = crossover(first_parent, second_parent)
+        new_pop.append(first_child)
+        new_pop.append(second_child)
+
+    return new_pop
+
 def run_genetic_algo():
     population = gen_population(POPULATION, BEATS_PER_SECTION)
-    for dna in population:
-        octave_range_ = octave_range_fitness(dna)
-        monotonic_score = monotonic_notes_fitness(dna)
-        no_jump_score = no_jump_fitness(dna)
-        print no_jump_score
-    # print population
-    # return 
+
+    for _ in range(ITERATIONS):
+        population = run_iteration(population)
+
+    return score_population(population)[0][1]
+
+def arrange_song_into_aaba(a,b):
+    return a+a+b+a
 
 if __name__ == "__main__":
-    dna = run_genetic_algo()
-    # print dna
+    # a = run_genetic_algo()
+    # b = run_genetic_algo()
+    # dna = arrange_song_into_aaba(a,b)
 
-    # tune = dnaToPsSong(dna)
-    # print tune
+    dna = run_genetic_algo()
+
+    tune = dnaToPsSong(dna)
+    print tune
 
     # rest_lists = [ ('r',4) ]
     # tune_plus_rest = tuple(list(tune) + rest_lists)
