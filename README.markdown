@@ -23,5 +23,6 @@ For more details, checkout `report.odt`.
 
 * Clone PySynth in to the projects root directory. Make sure that is resides in
   the `pysynth/` directory.
+* Run `python setup.py install` within the pysynth dir
 * Run `main.py`
 * Play `output.wav`
