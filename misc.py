@@ -22,6 +22,9 @@ def getOctaveIdx(chromosone):
 def getLetterIdx(chromosone):
     return chromosone[0]
 
+def getLetter(chromosone):
+    return DIATONIC_REST[getLetterIdx(chromosone)]
+
 def getAbsNote(chromosone):
     return chromosone[2]
 

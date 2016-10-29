@@ -60,3 +60,27 @@ def no_jump_fitness(dna):
           score += 1
 
     return score
+
+def isSignificantNote(chromosone):
+    letter = getLetter(chromosone)
+    return letter in CHORD_NOTES
+
+#Is Down beat a significant note?
+def down_beat_fitness(dna):
+    score = 0
+    for i in range(0, BEATS_PER_SECTION, BEATS_PER_BAR):
+        chromosone = dna[i]
+        if isSignificantNote(chromosone):
+          score += BEATS_PER_BAR
+
+    return score
+
+#Is back beat a significant note?
+def back_beat_fitness(dna):
+    score = 0
+    for i in range(1, BEATS_PER_SECTION, BEATS_PER_BAR/2):
+        chromosone = dna[i]
+        if isSignificantNote(chromosone):
+          score += BEATS_PER_BAR
+
+    return score

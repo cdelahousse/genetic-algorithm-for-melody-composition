@@ -1,14 +1,7 @@
-# song = (
-  # ('c7', 1), ('e', 4), ('g', 4),
-  # ('g*', 2), ('g5', 4),
-  # ('g5*', 4), ('r', 4), ('e5', 4),
-  # ('e5*', 4) 
-# )
-
 
 from constants import *
 from misc import *
-from fitness import octave_range_fitness, monotonic_notes_fitness, no_jump_fitness
+from fitness import *
 import random
 import pysynth_b
 
@@ -58,14 +51,26 @@ def crossover(first_parent, second_parent):
     second_child = second_parent[0:crossover_idx] + first_parent[crossover_idx:]
     return first_child, second_child
 
+def mutate_dna(dna):
+    def mutate_chromosone(chromosone):
+        r = random.randint(0,100)
+
+        if r <= MUTATION_PERCENTAGE:
+            return gen_chromosone()
+        else:
+            return chromosone
+
+    return [ mutate_chromosone(chromosone) for chromosone in dna]
 #Returns scored populations SORTED
 def score_population(population):
     population_with_score = []
     for dna in population:
         score = 0
-        score += 2*octave_range_fitness(dna)
-        score += monotonic_notes_fitness(dna)
-        score += no_jump_fitness(dna)
+        score += 3*octave_range_fitness(dna)
+        score += 2*monotonic_notes_fitness(dna)
+        score += 2*no_jump_fitness(dna)
+        score += down_beat_fitness(dna)
+        score += back_beat_fitness(dna)
 
         population_with_score.append((score, dna))
 
@@ -85,7 +90,10 @@ def run_iteration(population):
         new_pop.append(first_child)
         new_pop.append(second_child)
 
-    return new_pop
+    mutated_population = [
+            mutate_dna(dna) for dna in new_pop]
+
+    return mutated_population
 
 def run_genetic_algo():
     population = gen_population(POPULATION, BEATS_PER_SECTION)
@@ -95,20 +103,41 @@ def run_genetic_algo():
 
     return score_population(population)[0][1]
 
+def massage(section):
+    new_section = []
+    skip = False
+    for i in range(0, len(section) - 1):
+        if skip:
+            skip = False
+            continue
+        c_note = section[i][0]
+        n_note = section[i+1][0]
+        c_duration = section[i][1]
+        if c_note == n_note:
+            print c_note, n_note
+            dur = 2 if c_duration > 2 else 1
+            new_section.append((c_note, dur))
+            skip = True
+        else:
+            new_section.append((c_note,c_duration))
+
+    return tuple(new_section)
+
 def arrange_song_into_aaba(a,b):
     return a+a+b+a
 
 if __name__ == "__main__":
-    # a = run_genetic_algo()
-    # b = run_genetic_algo()
-    # dna = arrange_song_into_aaba(a,b)
-
-    dna = run_genetic_algo()
+    a = run_genetic_algo()
+    b = run_genetic_algo()
+    dna = arrange_song_into_aaba(a,b)
 
     tune = dnaToPsSong(dna)
+    massaged_tune = massage(tune)
     print tune
+    print
+    print massaged_tune
 
-    # rest_lists = [ ('r',4) ]
-    # tune_plus_rest = tuple(list(tune) + rest_lists)
+    rest_lists = [ ('r',4) ]
+    tune_plus_rest = tuple(list(massaged_tune) + rest_lists)
 
-    # pysynth_b.make_wav(tune, fn = "output.wav", leg_stac = .7, bpm = 180)
+    pysynth_b.make_wav(massaged_tune, fn = "output.wav", leg_stac = .7, bpm = 180)
